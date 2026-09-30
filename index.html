@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conectel BI Operacional</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260930-1">
+</head>
+<body class="loading">
+  <section class="loading-screen" id="loadingScreen" aria-live="polite">
+    <div class="loading-card">
+      <img class="brand-logo" src="img/2.png" alt="Logo Conectel">
+      <strong>Carregando dados</strong>
+      <small>Conectando ao banco online...</small>
+    </div>
+  </section>
+  <section class="login-screen" id="loginScreen">
+    <form class="login-card" id="loginForm">
+      <img class="brand-logo" src="img/2.png" alt="Logo Conectel">
+      <div>
+        <p class="eyebrow">Acesso interno</p>
+        <h1>Conectel BI</h1>
+      </div>
+      <label>E-mail<input name="user" type="email" autocomplete="username" required placeholder="usuario@empresa.com"></label>
+      <label>Senha<input name="password" type="password" autocomplete="current-password" required placeholder="Digite sua senha"></label>
+      <button class="primary-btn" type="submit">Entrar</button>
+      <small id="loginFeedback"></small>
+    </form>
+  </section>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-logo" src="img/2.png" alt="Logo Conectel">
+      <div>
+        <strong>Conectel BI</strong>
+        <small>Inteligência operacional</small>
+      </div>
+    </div>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Recolher menu">&lt;</button>
+
+    <nav class="nav" aria-label="Navegação principal">
+      <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+      <button class="nav-btn" data-view="resumo">Resumo mensal</button>
+      <button class="nav-btn" data-view="clientes">Clientes</button>
+      <button class="nav-btn" data-view="financeiro">Financeiro</button>
+      <button class="nav-btn" data-view="vendas">Vendas</button>
+      <button class="nav-btn" data-view="cancelamentos">Cancelamentos</button>
+    </nav>
+  </aside>
+
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Central operacional</p>
+        <h1>Clientes, receitas e cancelamentos em tempo real</h1>
+      </div>
+      <div class="topbar-actions">
+        <span class="role-badge" id="roleBadge">Visualizador</span>
+        <div class="actions-menu" id="actionsMenu">
+          <button class="icon-btn" id="actionsMenuBtn" type="button" aria-label="Abrir ações" aria-expanded="false">...</button>
+          <div class="actions-popover" id="actionsPopover">
+            <button class="ghost-btn" id="clearFiltersBtn" type="button">Limpar filtros</button>
+            <button class="ghost-btn" id="exportBtn" type="button">Exportar</button>
+            <button class="ghost-btn admin-only" id="importBtn" type="button">Importar dados</button>
+              <button class="ghost-btn admin-only" id="clearAllBtn" type="button">Limpar tudo (resetar cache)</button>
+            <button class="primary-btn admin-only" data-view-target="clientes" type="button">Novo cliente</button>
+            <button class="ghost-btn" id="logoutBtn" type="button">Sair</button>
+          </div>
+        </div>
+        <input class="file-input" id="importFile" type="file" accept=".csv,.json,.xlsx,.xls,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+      </div>
+    </header>
+
+    <section class="filters" id="filtersPanel">
+      <div class="filter-search-row">
+        <label class="filter-search">
+          Buscar
+          <input id="searchInput" type="search" placeholder="Empresa, sistema, serviço, consultor...">
+        </label>
+        <button class="icon-btn filter-toggle" id="filtersToggleBtn" type="button" aria-label="Mostrar filtros" aria-expanded="false">
+          <span class="filter-toggle-icon">v</span>
+          <small id="filtersActiveCount" hidden>0</small>
+        </button>
+      </div>
+      <div class="advanced-filters" id="advancedFilters" hidden>
+        <label>
+          Status
+          <select id="statusFilter">
+            <option value="">Todos</option>
+            <option value="ATIVO">Ativo</option>
+            <option value="ATRASO">Atraso</option>
+            <option value="CANCELADO">Cancelado</option>
+            <option value="DOWNGRADE">Downgrade</option>
+            <option value="BLOQUEIO">Bloqueio</option>
+          </select>
+        </label>
+        <label>
+          Mês
+          <select id="monthFilter">
+            <option value="">Todos os meses</option>
+          </select>
+        </label>
+        <label>
+          Sistema
+          <select id="systemFilter">
+            <option value="">Todos os sistemas</option>
+          </select>
+        </label>
+        <label>
+          Serviço
+          <select id="serviceFilter">
+            <option value="">Todos os serviços</option>
+          </select>
+        </label>
+        <label>
+          Financeiro
+          <select id="financeFilter">
+            <option value="">Todos</option>
+          </select>
+        </label>
+        <label>
+          Consultor
+          <select id="consultantFilter">
+            <option value="">Todos</option>
+          </select>
+        </label>
+        <label>
+          Motivo
+          <select id="reasonFilter">
+            <option value="">Todos</option>
+          </select>
+        </label>
+        <label>
+          Ranking
+          <select id="rankingFilter">
+            <option value="10">Top 10</option>
+            <option value="5">Top 5</option>
+            <option value="15">Top 15</option>
+            <option value="20">Top 20</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="view active" id="dashboard">
+      <div class="metric-grid" id="metricGrid"></div>
+
+      <div class="content-grid">
+        <section class="panel chart-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Resumo</p>
+              <h2>Saúde da carteira</h2>
+            </div>
+          </div>
+          <div class="donut-area">
+            <div class="donut" id="statusDonut"></div>
+            <div class="legend" id="statusLegend"></div>
+          </div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Receita</p>
+              <h2>Vendas por mês</h2>
+            </div>
+          </div>
+          <div class="bars" id="salesBars"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Carteira</p>
+              <h2>Serviços ativos</h2>
+            </div>
+          </div>
+          <div class="bars compact" id="serviceBars"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Risco</p>
+              <h2>Cancelamentos por motivo</h2>
+            </div>
+          </div>
+          <div class="bars compact" id="cancelReasonBars"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Sistemas</p>
+              <h2>Receita por sistema</h2>
+            </div>
+          </div>
+          <div class="bars compact" id="systemRevenueBars"></div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Ranking</p>
+              <h2>Top clientes por valor</h2>
+            </div>
+          </div>
+          <div class="ranking-list" id="topClientsList"></div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Comparativo</p>
+              <h2>Vendas x cancelamentos por mês</h2>
+            </div>
+          </div>
+          <div class="compare-bars" id="salesCancelBars"></div>
+        </section>
+      </div>
+    </section>
+
+
+    <section class="view" id="resumo">
+      <div class="content-grid">
+        <section class="panel wide summary-workspace">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Fechamento</p>
+              <h2>Resumo mensal</h2>
+            </div>
+          </div>
+          <div class="month-card-grid" id="summaryMonthCards"></div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Consolidado</p>
+              <h2>Resultado por mês</h2>
+            </div>
+            <strong id="summaryCount">0</strong>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mês</th>
+                  <th>Clientes</th>
+                  <th>Receita carteira</th>
+                  <th>Vendas</th>
+                  <th>Pagos</th>
+                  <th>Em aberto</th>
+                  <th>Cancelamentos</th>
+                  <th>Downgrades</th>
+                  <th>Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="summaryTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+    <section class="view" id="clientes">
+      <div class="content-grid">
+
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Base</p>
+              <h2>Clientes encontrados</h2>
+            </div>
+            <div class="section-actions">
+              <strong id="clientCount">0</strong>
+              <button class="primary-btn admin-only" id="newClientBtn" type="button">Novo cliente</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Empresa</th>
+                  <th>Filial</th>
+                  <th>Sistema</th>
+                  <th>Serviço</th>
+                  <th>Status</th>
+                  <th>Valor</th>
+                  <th>Vencimento</th>
+                  <th class="admin-only">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="clientsTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="financeiro">
+      <div class="content-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Financeiro</p>
+              <h2>Status de cobrança</h2>
+            </div>
+          </div>
+          <div class="bars compact" id="financeBars"></div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Acompanhamento</p>
+              <h2>Vencimentos e bloqueios</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Empresa</th>
+                  <th>Financeiro</th>
+                  <th>Status</th>
+                  <th>Valor</th>
+                  <th>Vencimento</th>
+                  <th>Sistema</th>
+                </tr>
+              </thead>
+              <tbody id="financeTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="vendas">
+      <div class="content-grid">
+
+
+        <section class="panel sales-workspace">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Comercial</p>
+              <h2>Vendas mensais e pagos mensais</h2>
+            </div>
+            <div class="section-actions">
+              <button class="primary-btn admin-only" id="newSaleBtn" type="button">Nova venda/aditivo</button>
+              <div class="segmented">
+                <button class="segment-btn active" type="button" data-sales-mode="vendas">Vendas mensais</button>
+                <button class="segment-btn" type="button" data-sales-mode="pagos">Pagos mensais</button>
+              </div>
+            </div>
+          </div>
+          <div class="month-card-grid" id="salesMonthCards"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Equipe</p>
+              <h2 id="salesSummaryTitle">Vendas por consultor</h2>
+            </div>
+          </div>
+          <div class="bars compact" id="consultantBars"></div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow" id="salesTableEyebrow">Janeiro a dezembro</p>
+              <h2 id="salesTableTitle">Dados do mês selecionado</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Consultor</th>
+                  <th>Mês</th>
+                  <th>Status</th>
+                  <th>Valor</th>
+                  <th>Empresa</th>
+                  <th>Venda</th>
+                  <th class="admin-only">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="salesTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="cancelamentos">
+      <div class="content-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Retenção</p>
+              <h2>Cancelamentos por consultor</h2>
+            </div>
+          </div>
+          <div class="bars compact" id="cancelConsultantBars"></div>
+        </section>
+
+        <section class="panel wide cancel-workspace">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Retenção</p>
+              <h2>Cancelamentos por mês</h2>
+            </div>
+            <div class="section-actions admin-only">
+              <button class="primary-btn" id="newCancelBtn" type="button">Novo cancelamento</button>
+              <button class="ghost-btn danger" id="clearCancelsBtn" type="button">Limpar tudo</button>
+            </div>
+          </div>
+          <div class="month-card-grid" id="cancelMonthCards"></div>
+          <div class="panel-head table-panel-head">
+            <div>
+              <p class="eyebrow" id="cancelTableEyebrow">Janeiro a dezembro</p>
+              <h2 id="cancelTableTitle">Dados do mês selecionado</h2>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Empresa</th>
+                  <th>Mês</th>
+                  <th>Status</th>
+                  <th>Motivo</th>
+                  <th>Consultor</th>
+                  <th>Valor</th>
+                  <th class="admin-only">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="cancelTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+
+
+
+  <div class="modal-backdrop" id="saleModal" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="saleModalTitle">
+      <div class="panel-head modal-head">
+        <div>
+          <p class="eyebrow">Comercial</p>
+          <h2 id="saleModalTitle">Nova venda ou aditivo</h2>
+        </div>
+        <button class="icon-btn" id="saleModalXBtn" type="button" aria-label="Fechar modal">×</button>
+      </div>
+<form id="saleForm" class="form-grid compact-form">
+            <label>Empresa<input name="empresa" required placeholder="Nome da empresa"></label>
+            <label>Consultor
+              <select name="consultor">
+                <option>FABRICIO</option>
+                <option>PRISCILA</option>
+                <option>PAULO</option>
+                <option>PÓS</option>
+              </select>
+            </label>
+            <label>Mês
+              <select name="mes">
+                <option>JANEIRO</option>
+                <option>FEVEREIRO</option>
+                <option>MARÇO</option>
+                <option>ABRIL</option>
+                <option>MAIO</option>
+                <option>JUNHO</option>
+                <option>JULHO</option>
+                <option>AGOSTO</option>
+                <option>SETEMBRO</option>
+                <option>OUTUBRO</option>
+                <option>NOVEMBRO</option>
+                <option>DEZEMBRO</option>
+              </select>
+            </label>
+            <label>Tipo
+              <select name="venda">
+                <option>VENDA NOVA</option>
+                <option>ADITIVO</option>
+                <option>REATIVAÇÃO</option>
+              </select>
+            </label>
+            <label>Valor<input name="valor" type="number" min="0" step="0.01" required placeholder="0,00"></label>
+            <div class="modal-actions full">
+          <button class="ghost-btn" id="saleModalCloseBtn" type="button">Cancelar</button>
+          <button class="primary-btn" type="submit">Salvar venda</button>
+        </div>
+          </form>
+    </section>
+  </div>  <div class="modal-backdrop" id="clientModal" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="clientModalTitle">
+      <div class="panel-head modal-head">
+        <div>
+          <p class="eyebrow">Cadastro</p>
+          <h2 id="clientModalTitle">Novo cliente</h2>
+        </div>
+        <button class="icon-btn" id="clientModalXBtn" type="button" aria-label="Fechar modal">×</button>
+      </div>
+<form id="clientForm" class="form-grid compact-form">
+            <label>Empresa<input name="empresa" required placeholder="Nome da empresa"></label>
+            <label>Filial<input name="filial" placeholder="SP, SSA..."></label>
+            <label>Sistema<input name="sistema" placeholder="UNIQ, BILLING..."></label>
+            <label>Serviço<input name="servico" placeholder="PABX, Internet..."></label>
+            <label>Valor<input name="valor" type="number" min="0" step="0.01" placeholder="0,00"></label>
+            <label>Vencimento<input name="vencimento" type="date"></label>
+            <label>Status
+              <select name="status">
+                <option>ATIVO</option>
+                <option>BLOQUEIO PARCIAL</option>
+                <option>BLOQUEIO TOTAL</option>
+                <option>CANCELADO</option>
+              </select>
+            </label>
+            <label>Financeiro
+              <select name="financeiro">
+                <option>RECEBER</option>
+                <option>ATRASO</option>
+                <option>PAGO</option>
+              </select>
+            </label>
+            <div class="modal-actions full">
+          <button class="ghost-btn" id="clientModalCloseBtn" type="button">Cancelar</button>
+          <button class="primary-btn" type="submit">Salvar cliente</button>
+        </div>
+          </form>
+    </section>
+  </div>  <div class="modal-backdrop" id="cancelModal" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="cancelModalTitle">
+      <div class="panel-head modal-head">
+        <div>
+          <p class="eyebrow">Retenção</p>
+          <h2 id="cancelModalTitle">Novo cancelamento</h2>
+        </div>
+        <button class="icon-btn" id="cancelModalXBtn" type="button" aria-label="Fechar modal">×</button>
+      </div>
+      <form id="cancelForm" class="form-grid compact-form">
+        <label>Empresa<input name="empresa" required placeholder="Nome da empresa"></label>
+        <label>Mês<input name="mes" required placeholder="Ex.: AGOSTO/2026"></label>
+        <label>Status
+          <select name="status">
+            <option>CANCELADO</option>
+            <option>DOWNGRADE</option>
+          </select>
+        </label>
+        <label>Motivo<input name="motivo" placeholder="Motivo do cancelamento"></label>
+        <label>Consultor<input name="consultor" placeholder="POS, PRISCILA..."></label>
+        <label>Valor<input name="valor" type="number" min="0" step="0.01" placeholder="0,00"></label>
+        <div class="modal-actions full">
+          <button class="ghost-btn" id="cancelModalCloseBtn" type="button">Cancelar</button>
+          <button class="primary-btn" type="submit">Salvar cancelamento</button>
+        </div>
+      </form>
+    </section>
+  </div>  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js?v=20260903-11"></script>
+  <script src="js/app.js?v=20260903-11"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
